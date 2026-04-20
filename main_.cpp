@@ -13,7 +13,7 @@ private:
     string nombre;
     int vida;
     int vidaMaxima;
-    int posicionX, posicionY;  // Posición (x, y)
+    double posicionX, posicionY;  // Posición (x, y)
     int nivel;
     int elixir;  // Recurso
 
@@ -29,8 +29,8 @@ public:
     string obtenerNombre() const { return nombre; }
     int obtenerVida() const { return vida; }
     int obtenerVidaMaxima() const { return vidaMaxima; }
-    int obtenerPosicionX() const { return posicionX; }
-    int obtenerPosicionY() const { return posicionY; }
+    double obtenerPosicionX() const { return posicionX; }
+    double obtenerPosicionY() const { return posicionY; }
     int obtenerNivel() const { return nivel; }
     int obtenerElixir() const { return elixir; }
     
@@ -48,7 +48,7 @@ public:
         cout << "  -> " << nombre << " recibe " << cantidad << " de daño. Ahora tiene " << vida << " de vida.\n";
     }
     
-    void mover(int deltaX, int deltaY) {
+    void mover(double deltaX, double deltaY) {
         posicionX += deltaX;
         posicionY += deltaY;
         cout << "  -> " << nombre << " se mueve a (" << posicionX << ", " << posicionY << ").\n";
@@ -206,6 +206,16 @@ void comandoCurar(Entity& entity, const list<string>& args) {
     }
 }
 
+void ComandoSubirNivel(Entity& entity, const list<string>& args) {
+    if (args.size() != 0) {
+        cout << "Este comando no requiere de argumentos\n";
+        return;
+    }
+    entity.subirNivel();
+}
+
+
+
 // Comando como functor
 class ComandoDanio {
 private:
@@ -245,12 +255,65 @@ public:
     int obtenerContadorUsos() const { return contadorUsos; }
 };
 
+class Comands_restaurar_exi {
+
+    Entity& entity;
+    public:
+    Comands_restaurar_exi(Entity& ent) : entity(ent) {}
+
+    void operator()(const list<string>& args) {
+        if (args.size() != 1) {
+            cout << "Error: Restaurar exilir solo necesita un argumento\n";
+            return;
+        }
+        try {
+
+            int cantidad = stoi(args.front());
+            if (cantidad < 0) {
+                cout << "Error: no se aceptan numeros negativos\n";
+                return;
+            }
+            entity.restaurarElixir(cantidad);
+        }catch (const exception& e) {
+            cout << "Error: El argumento debe ser un numero\n";
+        }
+    }
+
+};
+
+class Comands_gastar_exi {
+
+    Entity& entity;
+public:
+    Comands_gastar_exi(Entity& ent) : entity(ent) {}
+
+    void operator()(const list<string>& args) {
+        if (args.size() != 1) {
+            cout << "Error: Restaurar exilir solo necesita un argumento\n";
+            return;
+        }
+        try {
+
+            int cantidad = stoi(args.front());
+            if (cantidad < 0) {
+                cout << "Error: no se aceptan numeros negativos\n";
+                return;
+            }
+            entity.restaurarElixir(cantidad);
+        }catch (const exception& e) {
+            cout << "Error: El argumento debe ser un numero\n";
+        }
+    }
+
+};
+
 
 int main () {
     Entity entity("Jugador 1",150,10,20);
     ComandCenter center(entity);
     ComandoDanio danio(entity);
-
+    Comands_gastar_exi gastar_Exilir(entity);
+    Comands_restaurar_exi restaurar_Exilir(entity);
 
     // Comando lambda
     auto mover = [&](const list<string> &args) {
@@ -259,8 +322,8 @@ int main () {
             return;
         }
         try {
-            int posX = stoi(args.front());
-            int posY = stoi(args.back());
+            double posX = stod(args.front());
+            double posY = stod(args.back());
             entity.mover(posX, posY);
         } catch (const exception &e) {
             cout << "Los valores deben ser numeros\n";
@@ -276,8 +339,12 @@ int main () {
 
     };
 
+    // usado de lambda como conexión para la función libre
     auto curar = [&](const list<string> &args) {
         comandoCurar(entity,args);
+    };
+    auto Subir_Nivel = [&](const list<string> &args) {
+        ComandoSubirNivel(entity,args);
     };
 
 
@@ -286,7 +353,9 @@ int main () {
     center.registrarComando("heal",curar);
     center.registrarComando("damage",danio);
     center.registrarComando("status",status);
-
+    center.registrarComando("restaurar_exilir",restaurar_Exilir);
+    center.registrarComando("gastar_exilir",gastar_Exilir);
+    center.registrarComando("subir_nivel",Subir_Nivel);
 
     center.executeCommand("move", list<string>{"10", "20"});
     center.executeCommand("status", list<string>{});
@@ -294,6 +363,11 @@ int main () {
     center.executeCommand("status", list<string>{});
     center.executeCommand("damage", list<string>{"10"});
     center.executeCommand("status", list<string>{});
+    center.executeCommand("gastar_exilir",list<string>{"70"});
+    center.executeCommand("status", list<string>{});
+    center.executeCommand("restaurar_exilir",list<string>{"50"});
+
+
 
     list<pair<string, list<string>>> steps({{{"heal"},{"10"}},{{"status"},{}}});
     center.macrocomandos("heal_status", steps);
@@ -306,5 +380,10 @@ int main () {
     center.executeMacro("damage_status");
     center.executeMacro("move_damage");
 
-    entity.mostrarEstado();
+    center.executeCommand("status", list<string>{});
+
+    center.executeCommand("subir_nivel", list<string>{});
+
+    center.executeCommand("status", list<string>{});
+
 }
