@@ -120,6 +120,7 @@ public:
         
         if (it == comandos.end()) {
             cout << "Comando desconocido: " << cmd << "\n";
+            cout << endl;
             return;
         }
         
@@ -137,7 +138,7 @@ public:
         
         // Registrar estado después en el historial
         string estadoDespues = entity.obtenerEstadoComoString();
-        historial.push_back(cmd + " | Antes: " + estadoAntes + " | Después: " + estadoDespues);
+        historial.push_back(cmd + " | Antes: " + estadoAntes + " |||||| DespuEs: " + estadoDespues);
     }
     
     // Eliminar comando
@@ -148,6 +149,7 @@ public:
             cout << "Comando eliminado: " << cmd << "\n";
         } else {
             cout << "No se puede eliminar, comando no existe: " << cmd << "\n";
+            cout<< endl;
         }
     }
     
@@ -178,7 +180,7 @@ public:
     
     // Mostrar historial
     void mostrarHistorial() const {
-        cout << "\n=== HISTORIAL DE EJECUCIÓN ===\n";
+        cout << "\n=== HISTORIAL DE EJECUCION ===\n";
         for (list<string>::const_iterator it = historial.begin(); it != historial.end(); ++it) {
             cout << *it << "\n";
         }
@@ -348,6 +350,7 @@ int main () {
     };
 
 
+    cout<< "################## Regsitrando comandos ######################\n";
 
     center.registrarComando("move",mover);
     center.registrarComando("heal",curar);
@@ -356,6 +359,8 @@ int main () {
     center.registrarComando("restaurar_exilir",restaurar_Exilir);
     center.registrarComando("gastar_exilir",gastar_Exilir);
     center.registrarComando("subir_nivel",Subir_Nivel);
+
+    cout << "################# Ejecución de comandos ######################\n";
 
     center.executeCommand("move", list<string>{"10", "20"});
     center.executeCommand("status", list<string>{});
@@ -366,7 +371,17 @@ int main () {
     center.executeCommand("gastar_exilir",list<string>{"70"});
     center.executeCommand("status", list<string>{});
     center.executeCommand("restaurar_exilir",list<string>{"50"});
+    center.executeCommand("status", list<string>{});
 
+
+    cout << "################# Ejecución de comandos que no estan resgistraods ######################\n";
+
+    center.executeCommand("volar", list<string>{});
+    center.executeCommand("comer_kfc", list<string>{});
+    center.executeCommand("atacar", list<string>{});
+
+
+    cout << "################# Resgitrandos macrocomandos ######################\n";
 
 
     list<pair<string, list<string>>> steps({{{"heal"},{"10"}},{{"status"},{}}});
@@ -375,6 +390,9 @@ int main () {
     center.macrocomandos("damage_status", steps2);
     list<pair<string, list<string>>> steps3({{{"move"},{"10", "30"}},{{"damage"},{"3"}}});
     center.macrocomandos("move_damage", steps3);
+
+    cout << "################# Ejecución de macrocomandos ######################\n";
+
 
     center.executeMacro("heal_status");
     center.executeMacro("damage_status");
@@ -385,5 +403,20 @@ int main () {
     center.executeCommand("subir_nivel", list<string>{});
 
     center.executeCommand("status", list<string>{});
+
+    cout << "################# Eliminando comando ######################\n";
+
+    center.remove_command("gastar_exilir");
+    center.remove_command("restaurar_exilir");
+
+    cout << "################# Eliminando comando no resgitrados ######################\n";
+    center.remove_command("comer");
+    center.remove_command("correr");
+    center.remove_command("patinar");
+
+
+    cout << ".............................Historial de Comandos..............................\n";
+    center.mostrarHistorial();
+
 
 }
